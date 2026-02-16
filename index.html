@@ -983,34 +983,10 @@
             <div class="animate-fade-in-up" style="animation-delay: 0.1s;">
                 <div class="setup-icon">⚙️</div>
                 <div class="setup-title">ตั้งค่าเซสชัน</div>
-                <div class="setup-subtitle">กรอกรายละเอียดค่าสนามและลูกแบดก่อนเริ่มเล่น</div>
+                <div class="setup-subtitle">เลือกจำนวนสนามแล้วเริ่มเพิ่มผู้เล่น</div>
             </div>
 
             <div class="card animate-fade-in-up" style="animation-delay: 0.15s;">
-                <div class="card-header"><span class="icon">🏟️</span> ค่าสนาม</div>
-                <div class="input-group">
-                    <label for="courtFee">ค่าสนาม (บาท)</label>
-                    <input type="text" id="courtFee" inputmode="decimal" placeholder="เช่น 400" />
-                </div>
-            </div>
-
-            <div class="card animate-fade-in-up" style="animation-delay: 0.2s;">
-                <div class="card-header"><span class="icon">🪶</span> ลูกแบดมินตัน</div>
-                <div class="input-group">
-                    <label for="shuttlePrice">ราคาต่อลูก (บาท)</label>
-                    <input type="text" id="shuttlePrice" inputmode="decimal" placeholder="เช่น 50" value="50" />
-                </div>
-            </div>
-
-            <div class="card animate-fade-in-up" style="animation-delay: 0.25s;">
-                <div class="card-header"><span class="icon">💳</span> พร้อมเพย์</div>
-                <div class="input-group">
-                    <label for="promptpayId">หมายเลขพร้อมเพย์ (เบอร์มือถือ / เลขบัตร ปชช.)</label>
-                    <input type="text" id="promptpayId" inputmode="tel" placeholder="เช่น 0812345678" />
-                </div>
-            </div>
-
-            <div class="card animate-fade-in-up" style="animation-delay: 0.3s;">
                 <div class="card-header"><span class="icon">🏟️</span> จำนวนสนาม</div>
                 <div class="input-group">
                     <label for="numberOfCourts">จำนวนสนาม (คอร์ท)</label>
@@ -1018,7 +994,7 @@
                 </div>
             </div>
 
-            <button class="btn btn-primary btn-block btn-lg animate-fade-in-up" style="animation-delay: 0.35s;"
+            <button class="btn btn-primary btn-block btn-lg animate-fade-in-up" style="animation-delay: 0.2s;"
                 onclick="startSession()">
                 🚀 เริ่มเซสชัน
             </button>
@@ -1095,29 +1071,46 @@
             </div>
         </div>
 
-        <!-- ===== SHUTTLE INPUT MODAL ===== -->
-        <div class="modal-overlay" id="shuttleModal">
+        <!-- ===== END SESSION FORM MODAL ===== -->
+        <div class="modal-overlay" id="endSessionModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>🪶 สรุปลูกแบด</h2>
-                    <button class="modal-close-btn" onclick="closeShuttleModal()" title="ปิด">✕</button>
+                    <h2>� สรุปค่าใช้จ่ายทั้งหมด</h2>
+                    <button class="modal-close-btn" onclick="closeEndSessionModal()" title="ปิด">✕</button>
                 </div>
 
                 <div class="card">
-                    <div class="card-header"><span class="icon">🪶</span> จำนวนลูกแบดที่ใช้</div>
+                    <div class="card-header"><span class="icon">🏟️</span> ค่าสนาม</div>
                     <div class="input-group">
-                        <label for="shuttleInput">กรอกจำนวนลูกแบดที่ใช้ทั้งหมด</label>
-                        <input type="text" id="shuttleInput" inputmode="numeric" placeholder="เช่น 5" value="0" />
-                    </div>
-                    <div style="margin-top: 12px; font-size: 0.85rem; color: var(--text-muted);" id="shuttlePriceHint">
-                        💰 ราคาต่อลูก: <strong style="color: var(--accent);">50 ฿</strong>
+                        <label for="endCourtFee">ค่าสนามรวมทั้งหมด (บาท)</label>
+                        <input type="text" id="endCourtFee" inputmode="decimal" placeholder="เช่น 400" />
                     </div>
                 </div>
 
-                <button class="btn btn-primary btn-block btn-lg" onclick="confirmShuttleAndCheckout()">
-                    🧮 คำนวณยอดเงิน
+                <div class="card">
+                    <div class="card-header"><span class="icon">🪶</span> ลูกแบดมินตัน</div>
+                    <div class="input-group">
+                        <label for="endShuttleCount">จำนวนลูกแบดที่ใช้ (ลูก)</label>
+                        <input type="text" id="endShuttleCount" inputmode="numeric" placeholder="เช่น 5" value="0" />
+                    </div>
+                    <div class="input-group" style="margin-top: 12px;">
+                        <label for="endShuttlePrice">ราคาลูกแบด (บาท/ลูก)</label>
+                        <input type="text" id="endShuttlePrice" inputmode="decimal" placeholder="เช่น 50" value="50" />
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><span class="icon">💳</span> พร้อมเพย์</div>
+                    <div class="input-group">
+                        <label for="endPromptpayId">เบอร์พร้อมเพย์รับเงิน</label>
+                        <input type="text" id="endPromptpayId" inputmode="tel" placeholder="เช่น 0812345678" />
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-block btn-lg" onclick="calculateAndShowSummary()">
+                    🧮 คำนวณยอดหารเฉลี่ย
                 </button>
-                <button class="btn btn-secondary btn-block" onclick="closeShuttleModal()">
+                <button class="btn btn-secondary btn-block" onclick="closeEndSessionModal()">
                     ✕ ยกเลิก
                 </button>
             </div>
@@ -1205,19 +1198,9 @@
 
         // ===== SETUP =====
         function startSession() {
-            const fee = parseFloat(document.getElementById('courtFee').value);
-            const shuttle = parseFloat(document.getElementById('shuttlePrice').value);
-            const ppId = document.getElementById('promptpayId').value.trim();
             const courts = parseInt(document.getElementById('numberOfCourts').value) || 1;
-
-            if (!fee || fee <= 0) return showToast('⚠️ กรุณากรอกค่าสนาม');
-            if (!shuttle || shuttle <= 0) return showToast('⚠️ กรุณากรอกราคาลูกแบด');
-            if (!ppId) return showToast('⚠️ กรุณากรอกหมายเลขพร้อมเพย์');
             if (courts < 1) return showToast('⚠️ ต้องมีอย่างน้อย 1 สนาม');
 
-            state.courtFee = fee;
-            state.shuttlePrice = shuttle;
-            state.organizerPromptPayID = ppId;
             state.numberOfCourts = courts;
             showScreen('lobby');
             document.getElementById('playerName').focus();
@@ -1477,38 +1460,53 @@
         function endSession() {
             if (state.players.length === 0) return showToast('⚠️ ไม่มีผู้เล่น');
 
-            // Update the shuttle price display in the modal
-            document.getElementById('shuttlePriceHint').innerHTML = `💰 ราคาต่อลูก: <strong style="color: var(--accent);">${state.shuttlePrice} ฿</strong>`;
-            document.getElementById('shuttleInput').value = '0';
-            document.getElementById('shuttleModal').classList.add('active');
-            document.getElementById('shuttleInput').focus();
+            // Reset form fields
+            document.getElementById('endCourtFee').value = '';
+            document.getElementById('endShuttleCount').value = '0';
+            document.getElementById('endShuttlePrice').value = '50';
+            document.getElementById('endPromptpayId').value = '';
+
+            document.getElementById('endSessionModal').classList.add('active');
+            document.getElementById('endCourtFee').focus();
         }
 
-        function closeShuttleModal() {
-            document.getElementById('shuttleModal').classList.remove('active');
+        function closeEndSessionModal() {
+            document.getElementById('endSessionModal').classList.remove('active');
         }
 
-        function confirmShuttleAndCheckout() {
-            const shuttleVal = parseInt(document.getElementById('shuttleInput').value) || 0;
-            if (shuttleVal < 0) return showToast('⚠️ จำนวนลูกแบดต้องไม่ติดลบ');
+        function calculateAndShowSummary() {
+            const courtFee = parseFloat(document.getElementById('endCourtFee').value) || 0;
+            const shuttleCount = parseInt(document.getElementById('endShuttleCount').value) || 0;
+            const shuttlePrice = parseFloat(document.getElementById('endShuttlePrice').value) || 0;
+            const promptpayId = document.getElementById('endPromptpayId').value.trim();
 
-            state.shuttleCount = shuttleVal;
-            closeShuttleModal();
+            if (courtFee <= 0) return showToast('⚠️ กรุณากรอกค่าสนามรวม');
+            if (!promptpayId) return showToast('⚠️ กรุณากรอกเบอร์พร้อมเพย์');
+            if (shuttleCount < 0) return showToast('⚠️ จำนวนลูกแบดต้องไม่ติดลบ');
 
-            // Now show checkout
-            const shuttleCost = state.shuttleCount * state.shuttlePrice;
-            const grandTotal = state.courtFee + shuttleCost;
+            // Save to state
+            state.courtFee = courtFee;
+            state.shuttleCount = shuttleCount;
+            state.shuttlePrice = shuttlePrice;
+            state.organizerPromptPayID = promptpayId;
+
+            // Calculate
+            const shuttleCost = shuttleCount * shuttlePrice;
+            const grandTotal = courtFee + shuttleCost;
             const perPerson = grandTotal / state.players.length;
+
+            // Close the form modal
+            closeEndSessionModal();
 
             // Render Bill
             document.getElementById('billSummary').innerHTML = `
     <div class="bill-row">
-      <span class="bill-label">🏟️ ค่าสนาม</span>
-      <span class="bill-value">${state.courtFee.toLocaleString()} ฿</span>
+      <span class="bill-label">🏟️ ค่าสนามรวม</span>
+      <span class="bill-value">${courtFee.toLocaleString()} ฿</span>
     </div>
     <div class="bill-row">
       <span class="bill-label">🪶 ลูกแบดที่ใช้</span>
-      <span class="bill-value">${state.shuttleCount} ลูก × ${state.shuttlePrice.toLocaleString()} ฿</span>
+      <span class="bill-value">${shuttleCount} ลูก × ${shuttlePrice.toLocaleString()} ฿</span>
     </div>
     <div class="bill-row">
       <span class="bill-label">🪶 ค่าลูกแบดรวม</span>
@@ -1530,17 +1528,13 @@
 
             // Generate PromptPay QR via promptpay.io
             const qrCard = document.getElementById('qrCard');
-            if (state.organizerPromptPayID) {
-                const ppId = state.organizerPromptPayID.replace(/[^0-9]/g, '');
-                const amount = perPerson.toFixed(2);
-                const qrUrl = `https://promptpay.io/${ppId}/${amount}.png`;
-                document.getElementById('qrImage').src = qrUrl;
-                document.getElementById('qrLabel').innerHTML =
-                    `สแกนเพื่อโอนเงิน <strong>${amount} ฿</strong><br/>พร้อมเพย์: ${escapeHtml(state.organizerPromptPayID)}`;
-                qrCard.style.display = '';
-            } else {
-                qrCard.style.display = 'none';
-            }
+            const ppIdClean = promptpayId.replace(/[^0-9]/g, '');
+            const amount = perPerson.toFixed(2);
+            const qrUrl = `https://promptpay.io/${ppIdClean}/${amount}.png`;
+            document.getElementById('qrImage').src = qrUrl;
+            document.getElementById('qrLabel').innerHTML =
+                `สแกนเพื่อโอนเงิน <strong>${amount} ฿</strong><br/>พร้อมเพย์: ${escapeHtml(promptpayId)}`;
+            qrCard.style.display = '';
 
             // Show the checkout modal
             document.getElementById('checkoutModal').classList.add('active');
@@ -1564,10 +1558,7 @@
             state.currentMatches = [];
             state.nextPlayerId = 1;
 
-            document.getElementById('courtFee').value = '';
-            document.getElementById('shuttlePrice').value = '50';
             document.getElementById('numberOfCourts').value = '1';
-            document.getElementById('promptpayId').value = '';
             document.getElementById('matchDisplay').innerHTML = '';
             renderPlayers();
             renderMatchHistory();
