@@ -964,6 +964,76 @@
         .toast.toast-hide {
             animation: fadeIn 0.2s ease-out reverse both;
         }
+
+        /* ===== COURT CARDS ===== */
+        .courts-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .court-card {
+            background: var(--bg-card);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            transition: var(--transition);
+        }
+
+        .court-card.court-active {
+            border-color: var(--accent);
+            box-shadow: 0 0 25px var(--accent-dim);
+        }
+
+        .court-card .court-header {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .court-card .court-status-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .court-status-empty {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+        }
+
+        .court-status-playing {
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        /* ===== PLAYER STATUS BADGES ===== */
+        .badge-waiting {
+            background: rgba(57, 255, 20, 0.12);
+            color: var(--accent);
+        }
+
+        .badge-playing {
+            background: rgba(247, 127, 0, 0.15);
+            color: var(--intermediate);
+        }
+
+        .court-empty-state {
+            text-align: center;
+            padding: 16px 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 
@@ -1040,24 +1110,20 @@
                     <div class="stat-label">ผู้เล่น</div>
                 </div>
                 <div class="stat-card">
+                    <div class="stat-value" id="statWaiting">0</div>
+                    <div class="stat-label">รอเล่น</div>
+                </div>
+                <div class="stat-card">
                     <div class="stat-value" id="statMatches">0</div>
                     <div class="stat-label">แมตช์</div>
                 </div>
             </div>
 
-            <!-- Match Generation -->
-            <div class="card">
-                <div class="card-header"><span class="icon">⚔️</span> จับคู่แมตช์ (<span id="courtCountLabel">1</span>
-                    สนาม)</div>
-                <button class="btn btn-primary btn-block" onclick="generateMatch()" id="btnGenMatch">
-                    🎲 สุ่มจับคู่แมตช์
-                </button>
-                <div id="matchDisplay" style="margin-top: 16px;"></div>
-            </div>
+            <!-- Independent Courts -->
+            <div class="section-title">สนาม</div>
+            <div class="courts-container" id="courtsContainer"></div>
 
-
-
-            <!-- Player List in Session -->
+            <!-- Waiting Players -->
             <div class="section-title">ผู้เล่นทั้งหมด (<span id="sessionPlayerCount">0</span>)</div>
             <div class="player-list" id="sessionPlayerList"></div>
 
@@ -1066,7 +1132,7 @@
             <div class="match-history" id="matchHistory">
                 <div class="empty-state" id="emptyMatches">
                     <div class="empty-icon">📋</div>
-                    <div class="empty-text">ยังไม่มีแมตช์<br />กด "สุ่มจับคู่แมตช์" เพื่อเริ่ม</div>
+                    <div class="empty-text">ยังไม่มีแมตช์<br />กด "สุ่มคนลงคอร์ทนี้" เพื่อเริ่ม</div>
                 </div>
             </div>
         </div>
@@ -1171,8 +1237,9 @@
             organizerPromptPayID: '',
             currentView: 'setup',
             matches: [],
-            currentMatches: [],
+            courts: [],  // each: { match: null | {teamA, teamB}, playerIds: [] }
             nextPlayerId: 1,
+            pairingHistory: {},
         };
 
         // ===== NAVIGATION =====
@@ -1231,6 +1298,7 @@
                 name,
                 skillLevel: skill,
                 gamesPlayed: 0,
+                status: 'waiting',
             });
 
             nameInput.value = '';
@@ -1281,13 +1349,25 @@
         // ===== START PLAYING =====
         function startPlaying() {
             if (state.players.length < 4) return showToast('⚠️ ต้องมีผู้เล่นอย่างน้อย 4 คน');
+            // Initialize courts
+            state.courts = [];
+            for (let i = 0; i < state.numberOfCourts; i++) {
+                state.courts.push({ match: null, playerIds: [] });
+            }
+            // Ensure all players are waiting
+            state.players.forEach(p => p.status = 'waiting');
             showScreen('session');
-            document.getElementById('courtCountLabel').textContent = state.numberOfCourts;
             updateSessionStats();
+            renderCourts();
             renderSessionPlayers();
         }
 
         function backToLobby() {
+            // Prevent going back if any court has an active game
+            const activeCourts = state.courts.filter(c => c.match !== null);
+            if (activeCourts.length > 0) {
+                return showToast('⚠️ กรุณาจบเกมทุกสนามก่อน');
+            }
             showScreen('lobby');
             renderPlayers();
         }
@@ -1295,74 +1375,164 @@
         // ===== SESSION STATS =====
         function updateSessionStats() {
             document.getElementById('statPlayers').textContent = state.players.length;
+            document.getElementById('statWaiting').textContent = state.players.filter(p => p.status === 'waiting').length;
             document.getElementById('statMatches').textContent = state.matches.length;
         }
 
         // ===== MATCHMAKING =====
+
+        // Fisher-Yates shuffle
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Pairing history helpers
+        function pairKey(idA, idB) {
+            return idA < idB ? `${idA}-${idB}` : `${idB}-${idA}`;
+        }
+
+        function getPairCount(idA, idB) {
+            return state.pairingHistory[pairKey(idA, idB)] || 0;
+        }
+
+        function recordPairings(match) {
+            const tA = match.teamA;
+            const tB = match.teamB;
+            const k1 = pairKey(tA[0].id, tA[1].id);
+            const k2 = pairKey(tB[0].id, tB[1].id);
+            state.pairingHistory[k1] = (state.pairingHistory[k1] || 0) + 2;
+            state.pairingHistory[k2] = (state.pairingHistory[k2] || 0) + 2;
+            for (const a of tA) {
+                for (const b of tB) {
+                    const k = pairKey(a.id, b.id);
+                    state.pairingHistory[k] = (state.pairingHistory[k] || 0) + 1;
+                }
+            }
+        }
+
         function balanceFour(four) {
             const pairings = [
                 [[0, 1], [2, 3]],
                 [[0, 2], [1, 3]],
                 [[0, 3], [1, 2]],
             ];
-            let bestPairing = null;
-            let bestDiff = Infinity;
+            let minDiff = Infinity;
             for (const [[a, b], [c, d]] of pairings) {
-                const scoreA = four[a].skillLevel + four[b].skillLevel;
-                const scoreB = four[c].skillLevel + four[d].skillLevel;
-                const diff = Math.abs(scoreA - scoreB);
-                if (diff < bestDiff) {
-                    bestDiff = diff;
-                    bestPairing = { teamA: [four[a], four[b]], teamB: [four[c], four[d]] };
+                const diff = Math.abs(
+                    (four[a].skillLevel + four[b].skillLevel) -
+                    (four[c].skillLevel + four[d].skillLevel)
+                );
+                if (diff < minDiff) minDiff = diff;
+            }
+            const threshold = Math.min(minDiff + 1, 2);
+            const candidates = [];
+            for (const [[a, b], [c, d]] of pairings) {
+                const diff = Math.abs(
+                    (four[a].skillLevel + four[b].skillLevel) -
+                    (four[c].skillLevel + four[d].skillLevel)
+                );
+                if (diff <= threshold) {
+                    const partnerPenalty =
+                        getPairCount(four[a].id, four[b].id) +
+                        getPairCount(four[c].id, four[d].id);
+                    const opponentPenalty =
+                        getPairCount(four[a].id, four[c].id) +
+                        getPairCount(four[a].id, four[d].id) +
+                        getPairCount(four[b].id, four[c].id) +
+                        getPairCount(four[b].id, four[d].id);
+                    const totalPenalty = partnerPenalty * 2 + opponentPenalty + diff * 3;
+                    candidates.push({
+                        teamA: [four[a], four[b]],
+                        teamB: [four[c], four[d]],
+                        penalty: totalPenalty,
+                    });
                 }
             }
-            return bestPairing;
+            const bestPenalty = Math.min(...candidates.map(c => c.penalty));
+            const best = candidates.filter(c => c.penalty === bestPenalty);
+            const chosen = best[Math.floor(Math.random() * best.length)];
+            return { teamA: chosen.teamA, teamB: chosen.teamB };
         }
 
-        function generateMatch() {
-            const courtsNeeded = state.numberOfCourts;
-            const playersNeeded = courtsNeeded * 4;
+        // ===== PER-COURT MATCHMAKING =====
+        function queueCourt(courtIdx) {
+            const court = state.courts[courtIdx];
+            if (court.match) return showToast('⚠️ สนามนี้มีเกมอยู่แล้ว');
 
-            if (state.players.length < 4) return showToast('⚠️ ต้องมีผู้เล่นอย่างน้อย 4 คน');
+            // Get only WAITING players
+            const waitingPlayers = state.players.filter(p => p.status === 'waiting');
+            if (waitingPlayers.length < 4) return showToast(`⚠️ ผู้เล่นรอไม่พอ (รอ ${waitingPlayers.length} / ต้องการ 4)`);
 
-            // Sort by fewest games first
-            const sorted = [...state.players].sort((a, b) => a.gamesPlayed - b.gamesPlayed);
-
-            // Determine how many courts we can actually fill
-            const maxCourts = Math.min(courtsNeeded, Math.floor(sorted.length / 4));
-            if (maxCourts === 0) return showToast('⚠️ ผู้เล่นไม่พอสำหรับจับคู่');
-
-            const selected = sorted.slice(0, maxCourts * 4);
-            const courtMatches = [];
-
-            for (let c = 0; c < maxCourts; c++) {
-                const four = selected.slice(c * 4, c * 4 + 4);
-                const match = balanceFour(four);
-                courtMatches.push(match);
-
-                // Increment game counts
-                [...match.teamA, ...match.teamB].forEach(mp => {
-                    const p = state.players.find(pl => pl.id === mp.id);
-                    if (p) p.gamesPlayed++;
-                });
+            // Sort by fewest games, shuffle within same gamesPlayed
+            const sorted = [...waitingPlayers].sort((a, b) => a.gamesPlayed - b.gamesPlayed);
+            let i = 0;
+            while (i < sorted.length) {
+                let j = i;
+                while (j < sorted.length && sorted[j].gamesPlayed === sorted[i].gamesPlayed) j++;
+                const group = sorted.slice(i, j);
+                shuffleArray(group);
+                for (let k = 0; k < group.length; k++) sorted[i + k] = group[k];
+                i = j;
             }
 
-            state.currentMatches = courtMatches;
-            state.matches.push(...courtMatches);
+            // Pick top 4 and balance
+            const four = sorted.slice(0, 4);
+            const match = balanceFour(four);
 
-            if (maxCourts < courtsNeeded) {
-                showToast(`⚠️ ผู้เล่นพอแค่ ${maxCourts} สนาม (ต้องการ ${courtsNeeded})`);
-            }
+            // Record history
+            recordPairings(match);
 
-            renderMatchDisplay();
-            renderMatchHistory();
-            updateSessionStats();
+            // Set players to 'playing'
+            const playingIds = [...match.teamA, ...match.teamB].map(p => p.id);
+            playingIds.forEach(id => {
+                const p = state.players.find(pl => pl.id === id);
+                if (p) p.status = 'playing';
+            });
+
+            // Set court state
+            court.match = match;
+            court.playerIds = playingIds;
+
+            renderCourts();
             renderSessionPlayers();
+            updateSessionStats();
+            showToast(`✅ สนาม ${courtIdx + 1} เริ่มเกมแล้ว!`);
         }
 
-        function renderMatchDisplay() {
-            const matches = state.currentMatches;
-            if (!matches || matches.length === 0) return;
+        function endCourtGame(courtIdx) {
+            const court = state.courts[courtIdx];
+            if (!court.match) return;
+
+            // Increment gamesPlayed and set status back to 'waiting'
+            court.playerIds.forEach(id => {
+                const p = state.players.find(pl => pl.id === id);
+                if (p) {
+                    p.gamesPlayed++;
+                    p.status = 'waiting';
+                }
+            });
+
+            // Record in match history
+            state.matches.push({ ...court.match, courtNum: courtIdx + 1 });
+
+            // Clear the court
+            court.match = null;
+            court.playerIds = [];
+
+            renderCourts();
+            renderSessionPlayers();
+            updateSessionStats();
+            showToast(`🏁 จบเกมสนาม ${courtIdx + 1}`);
+            renderMatchHistory();
+        }
+
+        // ===== RENDER COURTS =====
+        function renderCourts() {
+            const container = document.getElementById('courtsContainer');
 
             const renderTeam = (team, label, score) => `
     <div class="team-block">
@@ -1382,21 +1552,44 @@
     </div>
   `;
 
-            const html = matches.map((match, i) => {
-                const scoreA = match.teamA.reduce((s, p) => s + p.skillLevel, 0);
-                const scoreB = match.teamB.reduce((s, p) => s + p.skillLevel, 0);
-                const courtLabel = matches.length > 1 ? `<div class="court-label">🏟️ สนาม ${i + 1}</div>` : '';
-                return `
-      ${courtLabel}
-      <div class="match-display">
-        ${renderTeam(match.teamA, 'ทีม A', scoreA)}
-        <div class="vs-label">⚔️ VS</div>
-        ${renderTeam(match.teamB, 'ทีม B', scoreB)}
-      </div>
-    `;
+            container.innerHTML = state.courts.map((court, idx) => {
+                const isActive = court.match !== null;
+                if (isActive) {
+                    const m = court.match;
+                    const scoreA = m.teamA.reduce((s, p) => s + p.skillLevel, 0);
+                    const scoreB = m.teamB.reduce((s, p) => s + p.skillLevel, 0);
+                    return `
+          <div class="court-card court-active animate-scale-in">
+            <div class="court-header">
+              <span>🏟️ สนาม ${idx + 1}</span>
+              <span class="court-status-label court-status-playing">กำลังเล่น</span>
+            </div>
+            <div class="match-display" style="box-shadow:none; border:none; padding:0;">
+              ${renderTeam(m.teamA, 'ทีม A', scoreA)}
+              <div class="vs-label">⚔️ VS</div>
+              ${renderTeam(m.teamB, 'ทีม B', scoreB)}
+            </div>
+            <button class="btn btn-danger btn-block" style="margin-top: 16px;" onclick="endCourtGame(${idx})">
+              🏁 จบเกมคอร์ทนี้
+            </button>
+          </div>
+        `;
+                } else {
+                    const waitingCount = state.players.filter(p => p.status === 'waiting').length;
+                    return `
+          <div class="court-card">
+            <div class="court-header">
+              <span>🏟️ สนาม ${idx + 1}</span>
+              <span class="court-status-label court-status-empty">ว่าง</span>
+            </div>
+            <div class="court-empty-state">พร้อมรับผู้เล่น • รอ ${waitingCount} คน</div>
+            <button class="btn btn-primary btn-block" onclick="queueCourt(${idx})" ${waitingCount < 4 ? 'disabled' : ''}>
+              🎲 สุ่มคนลงคอร์ทนี้
+            </button>
+          </div>
+        `;
+                }
             }).join('');
-
-            document.getElementById('matchDisplay').innerHTML = `<div class="matches-container">${html}</div>`;
         }
 
         // ===== SESSION PLAYER LIST =====
@@ -1410,25 +1603,41 @@
                 return;
             }
 
-            list.innerHTML = state.players.map(p => `
-    <div class="player-card" data-id="${p.id}">
+            // Sort: waiting first, then playing
+            const sorted = [...state.players].sort((a, b) => {
+                if (a.status === 'waiting' && b.status !== 'waiting') return -1;
+                if (a.status !== 'waiting' && b.status === 'waiting') return 1;
+                return 0;
+            });
+
+            list.innerHTML = sorted.map(p => {
+                const statusBadge = p.status === 'waiting'
+                    ? '<span class="badge badge-waiting">รอเล่น</span>'
+                    : '<span class="badge badge-playing">กำลังเล่น</span>';
+                const canRemove = p.status === 'waiting';
+                return `
+    <div class="player-card" data-id="${p.id}" style="${p.status === 'playing' ? 'opacity: 0.6;' : ''}">
       <div class="player-avatar">${p.name.charAt(0).toUpperCase()}</div>
       <div class="player-info">
         <div class="player-name">${escapeHtml(p.name)}</div>
         <div class="player-meta">
           <span class="badge badge-${getSkillClass(p.skillLevel)}">${getSkillLabel(p.skillLevel)}</span>
+          ${statusBadge}
           <span class="game-count">🎮 ${p.gamesPlayed} เกม</span>
         </div>
       </div>
-      <button class="btn-remove" onclick="removeSessionPlayer(${p.id})" title="ลบผู้เล่น">🗑️</button>
+      ${canRemove ? `<button class="btn-remove" onclick="removeSessionPlayer(${p.id})" title="ลบผู้เล่น">🗑️</button>` : ''}
     </div>
-  `).join('');
+  `;
+            }).join('');
         }
 
         function removeSessionPlayer(id) {
             const p = state.players.find(pl => pl.id === id);
+            if (p && p.status === 'playing') return showToast('⚠️ ไม่สามารถลบผู้เล่นที่กำลังเล่นอยู่');
             state.players = state.players.filter(pl => pl.id !== id);
             renderSessionPlayers();
+            renderCourts();
             updateSessionStats();
             if (p) showToast(`🗑️ ลบ ${p.name} แล้ว`);
         }
@@ -1437,7 +1646,7 @@
             const container = document.getElementById('matchHistory');
 
             if (state.matches.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">ยังไม่มีแมตช์<br/>กด "สุ่มจับคู่แมตช์" เพื่อเริ่ม</div></div>';
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">ยังไม่มีแมตช์<br/>กด "สุ่มคนลงคอร์ทนี้" เพื่อเริ่ม</div></div>';
                 return;
             }
 
@@ -1448,17 +1657,23 @@
         <div class="match-teams">
           ${m.teamA.map(p => p.name).join(' & ')} <strong style="color:var(--accent)">VS</strong> ${m.teamB.map(p => p.name).join(' & ')}
         </div>
+        <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">🏟️ สนาม ${m.courtNum || '?'}</div>
       </div>
     </div>
   `).join('');
 
-            // Auto-scroll to latest
             container.scrollTop = container.scrollHeight;
         }
 
         // ===== END SESSION (two-step flow) =====
         function endSession() {
             if (state.players.length === 0) return showToast('⚠️ ไม่มีผู้เล่น');
+
+            // Check for active courts
+            const activeCourts = state.courts.filter(c => c.match !== null);
+            if (activeCourts.length > 0) {
+                return showToast('⚠️ กรุณาจบเกมทุกสนามก่อนจึงจบเซสชัน');
+            }
 
             // Reset form fields
             document.getElementById('endCourtFee').value = '';
@@ -1555,11 +1770,11 @@
             state.organizerPromptPayID = '';
             state.currentView = 'setup';
             state.matches = [];
-            state.currentMatches = [];
+            state.courts = [];
             state.nextPlayerId = 1;
+            state.pairingHistory = {};
 
             document.getElementById('numberOfCourts').value = '1';
-            document.getElementById('matchDisplay').innerHTML = '';
             renderPlayers();
             renderMatchHistory();
             showScreen('setup');
