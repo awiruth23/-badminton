@@ -12,6 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
         rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
         /* ===== CSS RESET & BASE ===== */
@@ -1092,6 +1094,199 @@
             margin-top: 4px;
             letter-spacing: 1px;
         }
+
+        /* ===== LIVE DASHBOARD ===== */
+        .live-header {
+            text-align: center;
+            padding: 20px 16px 12px;
+            animation: fadeInUp 0.4s ease-out both;
+        }
+
+        .live-header-title {
+            font-size: 1.4rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, var(--accent), #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .live-header-sub {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 59, 48, 0.15);
+            color: #ff3b30;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            animation: livePulse 2s ease-in-out infinite;
+        }
+
+        .live-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #ff3b30;
+            border-radius: 50%;
+            animation: liveDot 1.5s ease-in-out infinite;
+        }
+
+        @keyframes livePulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 8px rgba(255, 59, 48, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(255, 59, 48, 0.4);
+            }
+        }
+
+        @keyframes liveDot {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.4;
+                transform: scale(0.7);
+            }
+        }
+
+        .live-section {
+            margin: 0 16px 16px;
+            animation: fadeInUp 0.4s ease-out both;
+        }
+
+        .live-section-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .live-court-card {
+            background: var(--bg-card);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 10px;
+            transition: var(--transition);
+        }
+
+        .live-court-card.live-court-active {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-dim);
+        }
+
+        .live-court-card.live-court-empty {
+            opacity: 0.5;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .live-waiting-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 6px;
+            animation: slideDown 0.25s ease-out both;
+        }
+
+        .live-waiting-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 255, 136, 0.05));
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .live-waiting-name {
+            flex: 1;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .live-waiting-queue {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .live-affiliate-banner {
+            margin: 16px;
+            padding: 24px 16px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border: 1.5px dashed rgba(102, 126, 234, 0.3);
+            border-radius: var(--radius);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .live-share-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            font-weight: 700;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+            font-size: 0.8rem;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: var(--transition);
+        }
+
+        .live-share-btn:active {
+            transform: scale(0.95);
+        }
+
+        .live-footer-note {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            padding: 16px;
+            opacity: 0.6;
+        }
     </style>
 </head>
 
@@ -1212,6 +1407,76 @@
             </div>
         </div>
 
+        <div class="screen" id="screen-live-dashboard">
+            <div class="live-header">
+                <div class="live-badge">LIVE</div>
+                <div class="live-header-title">📡 กระดานถ่ายทอดสด</div>
+                <div class="live-header-sub" id="liveGroupName"></div>
+            </div>
+
+            <div class="live-section" style="animation-delay:0.1s">
+                <div class="live-section-title">🏸 กำลังแข่งขัน</div>
+                <div id="liveCourts"></div>
+            </div>
+
+            <div id="liveAffiliateBanner1" class="live-affiliate-banner">📢 พื้นที่โฆษณา — ติดต่อแอดมิน</div>
+
+            <div class="live-section" style="animation-delay:0.2s">
+                <div class="live-section-title">⏳ รอลงสนาม</div>
+                <div id="liveWaiting"></div>
+            </div>
+
+            <div class="card" style="margin:16px;border-color:var(--accent);">
+                <div class="card-header"><span class="icon">🛒</span> สินค้าแนะนำ</div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <a href="https://s.shopee.co.th/6AfdcZHXt4" target="_blank"
+                        style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,255,255,0.03);border-radius:var(--radius-sm);border:1px solid var(--border);text-decoration:none;color:inherit;">
+                        <div style="font-size:2rem;">🏸</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:700;font-size:0.9rem;">ไม้แบด VS Swordman 77</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">รับประกันจากบริษัทไทย
+                                พร้อมขึ้นเอ็น น้ำหนักเบา</div>
+                            <div style="font-size:0.85rem;color:var(--accent);font-weight:800;margin-top:4px;">฿ 1,090
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="https://s.shopee.co.th/60MDQCKHEw" target="_blank"
+                        style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,255,255,0.03);border-radius:var(--radius-sm);border:1px solid var(--border);text-decoration:none;color:inherit;">
+                        <div style="font-size:2rem;">👜</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:700;font-size:0.9rem;">YONEX กระเป๋าแบดมินตัน</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">กระเป๋าแบดมินตัน
+                                กันน้ำ สายปรับสะพาย</div>
+                            <div style="font-size:0.85rem;color:var(--accent);font-weight:800;margin-top:4px;">฿ 678
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="https://s.shopee.co.th/10xXT6RkF1" target="_blank"
+                        style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,255,255,0.03);border-radius:var(--radius-sm);border:1px solid var(--border);text-decoration:none;color:inherit;">
+                        <div style="font-size:2rem;">🪶</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:700;font-size:0.9rem;">ลูกแบด RSL Silver Speed 75 (หลอด)</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">ลูกขนห่าน
+                                ระดับแข่งขัน ของแท้ห้างนกแก้ว 100%</div>
+                            <div style="font-size:0.85rem;color:var(--accent);font-weight:800;margin-top:4px;">฿ 1,279
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <div class="live-section" style="animation-delay:0.3s">
+                <div class="live-section-title">🏆 ตารางคะแนน (Leaderboard)</div>
+                <div id="liveLeaderboard" class="scoreboard-list"></div>
+            </div>
+
+            <div id="liveAffiliateBanner3" class="live-affiliate-banner">📢 พื้นที่โฆษณา — ติดต่อแอดมิน</div>
+
+            <div class="live-footer-note">📡 อัปเดตแบบ Real-time • ข้อมูลเปลี่ยนอัตโนมัติ</div>
+        </div>
+
         <div class="modal-overlay" id="scoreModal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -1319,6 +1584,7 @@
         <div class="sticky-footer" id="sessionFooter" style="display: none;">
             <div class="footer-inner">
                 <button class="btn btn-secondary" onclick="backToLobby()">👥 เพิ่มผู้เล่น</button>
+                <button class="live-share-btn" onclick="shareLiveDashboard()">📡 แชร์ Live</button>
                 <button class="btn btn-danger" onclick="endSession()">🏁 จบเซสชัน</button>
             </div>
         </div>
@@ -1359,6 +1625,22 @@
     </div>
 
     <script>
+        // ===== FIREBASE INIT =====
+        var firebaseConfig = {
+            apiKey: "AIzaSyCE77qUJTV9ZiL_9-xQDMpYAUjpjzHMBxw",
+            authDomain: "courtside-1e960.firebaseapp.com",
+            databaseURL: "https://courtside-1e960-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "courtside-1e960",
+            storageBucket: "courtside-1e960.firebasestorage.app",
+            messagingSenderId: "941366011582",
+            appId: "1:941366011582:web:21e4f71397e6083eaf20ef",
+            measurementId: "G-GQZWJWLTCF"
+        };
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        var database = firebase.database();
+
         // ===== STATE =====
         const state = { groups: [], activeGroupId: null, currentView: 'groups', nextGroupId: 1 };
         let courtEndingIdx = -1;
@@ -1366,7 +1648,18 @@
         function g() { return state.groups.find(gr => gr.id === state.activeGroupId); }
 
         // ===== LOCAL STORAGE =====
-        function saveState() { localStorage.setItem('courtSideState', JSON.stringify(state)); }
+        function saveState() {
+            localStorage.setItem('courtSideState', JSON.stringify(state));
+            // ===== SYNC TO FIREBASE =====
+            if (state.activeGroupId) {
+                var activeGroup = state.groups.find(function (gr) { return gr.id === state.activeGroupId; });
+                if (activeGroup) {
+                    database.ref('live_groups/' + state.activeGroupId).set(activeGroup).catch(function (err) {
+                        console.error('Firebase sync error:', err);
+                    });
+                }
+            }
+        }
 
         function loadState() {
             const saved = localStorage.getItem('courtSideState');
@@ -1444,7 +1737,37 @@
                 renderGroups();
             }
         }
-        window.addEventListener('load', loadState);
+        window.addEventListener('load', function () {
+            // ===== LIVE MODE DETECTION (Firebase Real-time) =====
+            var params = new URLSearchParams(window.location.search);
+            var liveId = params.get('live');
+            if (liveId) {
+                // Hide admin UI
+                var header = document.querySelector('.app-header');
+                var footer = document.getElementById('sessionFooter');
+                if (header) header.style.display = 'none';
+                if (footer) footer.style.display = 'none';
+                // Show live dashboard
+                document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); });
+                var liveScreen = document.getElementById('screen-live-dashboard');
+                if (liveScreen) liveScreen.classList.add('active');
+                // Real-time listener
+                database.ref('live_groups/' + liveId).on('value', function (snapshot) {
+                    var data = snapshot.val();
+                    if (data) {
+                        renderLiveDashboard(data);
+                    } else {
+                        document.getElementById('liveCourts').innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;">⏳ รอแอดมินเริ่มเซสชัน...</div>';
+                        document.getElementById('liveWaiting').innerHTML = '';
+                        document.getElementById('liveLeaderboard').innerHTML = '';
+                        var nameEl = document.getElementById('liveGroupName');
+                        if (nameEl) nameEl.textContent = '🔄 กำลังรอข้อมูล...';
+                    }
+                });
+                return; // Skip normal loadState
+            }
+            loadState();
+        });
         window.addEventListener('DOMContentLoaded', function () {
             if (state.currentView === 'groups' || document.getElementById('screen-groups').classList.contains('active')) {
                 renderGroups();
@@ -1926,6 +2249,104 @@
                 setTimeout(function () { window.location.reload(); }, 800);
             } catch (e) {
                 showToast('❌ ข้อมูลไม่ถูกต้อง โปรดตรวจสอบโค้ดอีกครั้ง');
+            }
+        }
+
+        // ===== LIVE DASHBOARD (Firebase Real-time) =====
+        function shareLiveDashboard() {
+            if (!state.activeGroupId) return showToast('⚠️ ไม่พบข้อมูลก๊วน');
+            var url = window.location.origin + window.location.pathname + '?live=' + state.activeGroupId;
+            // Copy to clipboard
+            try {
+                navigator.clipboard.writeText(url).then(function () {
+                    showToast('✅ คัดลอกลิงก์ Live แล้ว — วางส่งใน LINE ได้เลย!');
+                }).catch(function () {
+                    fallbackCopyLive(url);
+                });
+            } catch (e) {
+                fallbackCopyLive(url);
+            }
+        }
+
+        function fallbackCopyLive(text) {
+            var ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            showToast('✅ คัดลอกลิงก์ Live แล้ว — วางส่งใน LINE ได้เลย!');
+        }
+
+        function renderLiveDashboard(data) {
+            // Group name
+            var nameEl = document.getElementById('liveGroupName');
+            if (nameEl) nameEl.textContent = '🏸 ' + (data.name || 'ก๊วนแบดมินตัน');
+
+            // === Courts ===
+            var courtsEl = document.getElementById('liveCourts');
+            if (courtsEl && data.courts) {
+                courtsEl.innerHTML = data.courts.map(function (court, idx) {
+                    if (court.match) {
+                        var m = court.match;
+                        var sA = m.teamA.reduce(function (s, p) { return s + (p.skillLevel || 2); }, 0);
+                        var sB = m.teamB.reduce(function (s, p) { return s + (p.skillLevel || 2); }, 0);
+                        var teamAHtml = m.teamA.map(function (p) {
+                            return '<div class="team-player"><div class="tp-avatar">' + p.name.charAt(0).toUpperCase() + '</div><div class="tp-name">' + p.name + '</div></div>';
+                        }).join('');
+                        var teamBHtml = m.teamB.map(function (p) {
+                            return '<div class="team-player"><div class="tp-avatar">' + p.name.charAt(0).toUpperCase() + '</div><div class="tp-name">' + p.name + '</div></div>';
+                        }).join('');
+                        return '<div class="live-court-card live-court-active">' +
+                            '<div class="court-header"><span>🏟️ สนาม ' + (idx + 1) + '</span><span class="court-status-label court-status-playing">กำลังเล่น</span></div>' +
+                            '<div class="match-display" style="box-shadow:none;border:none;padding:0;">' +
+                            '<div class="team-block"><div class="team-label">ทีม A <span class="team-score">⭐ ' + sA + '</span></div><div class="team-players">' + teamAHtml + '</div></div>' +
+                            '<div class="vs-label">⚔️ VS</div>' +
+                            '<div class="team-block"><div class="team-label">ทีม B <span class="team-score">⭐ ' + sB + '</span></div><div class="team-players">' + teamBHtml + '</div></div>' +
+                            '</div></div>';
+                    } else {
+                        return '<div class="live-court-card live-court-empty"><div class="court-header"><span>🏟️ สนาม ' + (idx + 1) + '</span><span class="court-status-label court-status-empty">ว่าง</span></div><div style="padding:12px 0;color:var(--text-muted);">ยังไม่มีเกม</div></div>';
+                    }
+                }).join('');
+            }
+
+            // === Waiting Players ===
+            var waitingEl = document.getElementById('liveWaiting');
+            if (waitingEl && data.players) {
+                var waiting = data.players.filter(function (p) { return p.status === 'waiting' && p.isPresent !== false; });
+                if (waiting.length === 0) {
+                    waitingEl.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:16px;font-size:0.85rem;">ทุกคนกำลังเล่นอยู่ 🎉</div>';
+                } else {
+                    waitingEl.innerHTML = waiting.map(function (p, i) {
+                        return '<div class="live-waiting-item" style="animation-delay:' + (i * 0.05) + 's">' +
+                            '<div class="live-waiting-avatar">' + p.name.charAt(0).toUpperCase() + '</div>' +
+                            '<div class="live-waiting-name">' + p.name + '</div>' +
+                            '<div class="live-waiting-queue">คิวที่ ' + (i + 1) + '</div>' +
+                            '</div>';
+                    }).join('');
+                }
+            }
+
+            // === Leaderboard ===
+            var lbEl = document.getElementById('liveLeaderboard');
+            if (lbEl && data.players) {
+                var sorted = data.players.slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+                var medals = ['🥇', '🥈', '🥉'];
+                lbEl.innerHTML = sorted.map(function (p, i) {
+                    var rank = i < 3 ? medals[i] : '' + (i + 1);
+                    var tc = i < 3 ? ' top-' + (i + 1) : '';
+                    var sc = p.score || 0;
+                    var col = sc > 0 ? 'var(--accent)' : sc < 0 ? 'var(--danger)' : 'var(--text-muted)';
+                    var sign = sc > 0 ? '+' : '';
+                    return '<div class="scoreboard-row' + tc + '">' +
+                        '<div class="scoreboard-rank">' + rank + '</div>' +
+                        '<div class="scoreboard-name">' + p.name + '</div>' +
+                        '<div class="scoreboard-score" style="color:' + col + '">' + sign + sc + ' แต้ม</div>' +
+                        '<div class="scoreboard-games">🎮 ' + (p.gamesPlayed || 0) + '</div>' +
+                        '</div>';
+                }).join('');
             }
         }
     </script>
