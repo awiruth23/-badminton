@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
         rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
         /* ===== CSS RESET & BASE ===== */
@@ -96,18 +97,6 @@
             }
         }
 
-        @keyframes pulse {
-
-            0%,
-            100% {
-                box-shadow: 0 0 0 0 var(--accent-glow);
-            }
-
-            50% {
-                box-shadow: 0 0 20px 8px var(--accent-glow);
-            }
-        }
-
         @keyframes scaleIn {
             from {
                 opacity: 0;
@@ -116,20 +105,6 @@
 
             to {
                 opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        @keyframes countPop {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.3);
-            }
-
-            100% {
                 transform: scale(1);
             }
         }
@@ -148,10 +123,6 @@
 
         .animate-scale-in {
             animation: scaleIn 0.3s ease-out both;
-        }
-
-        .count-pop {
-            animation: countPop 0.25s ease-out;
         }
 
         /* ===== LAYOUT ===== */
@@ -230,10 +201,6 @@
             gap: 8px;
         }
 
-        .card-header .icon {
-            font-size: 1rem;
-        }
-
         /* ===== INPUTS ===== */
         .input-group {
             display: flex;
@@ -267,10 +234,6 @@
         select:focus {
             border-color: var(--accent);
             box-shadow: 0 0 0 3px var(--accent-dim);
-        }
-
-        input::placeholder {
-            color: var(--text-muted);
         }
 
         select {
@@ -354,15 +317,6 @@
             border-radius: var(--radius);
         }
 
-        .btn-icon {
-            width: 44px;
-            height: 44px;
-            min-height: 44px;
-            padding: 0;
-            border-radius: 50%;
-            font-size: 1.2rem;
-        }
-
         /* ===== SKILL BADGES ===== */
         .badge {
             display: inline-flex;
@@ -389,6 +343,16 @@
         .badge-advanced {
             background: rgba(230, 57, 70, 0.15);
             color: var(--advanced);
+        }
+
+        .badge-waiting {
+            background: rgba(57, 255, 20, 0.12);
+            color: var(--accent);
+        }
+
+        .badge-playing {
+            background: rgba(247, 127, 0, 0.15);
+            color: var(--intermediate);
         }
 
         /* ===== PLAYER LIST ===== */
@@ -444,6 +408,7 @@
             align-items: center;
             gap: 8px;
             margin-top: 4px;
+            flex-wrap: wrap;
         }
 
         .player-card .game-count {
@@ -465,12 +430,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: var(--transition);
             flex-shrink: 0;
-        }
-
-        .player-card .btn-remove:hover {
-            background: rgba(255, 71, 87, 0.3);
         }
 
         /* ===== ADD PLAYER ROW ===== */
@@ -495,30 +455,61 @@
             padding: 0 18px;
         }
 
-        /* ===== MATCH CARD ===== */
-        .matches-container {
+        /* ===== MATCH CARD & COURTS ===== */
+        .courts-container {
             display: flex;
             flex-direction: column;
             gap: 16px;
         }
 
-        .court-label {
-            font-size: 0.7rem;
+        .court-card {
+            background: var(--bg-card);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            transition: var(--transition);
+        }
+
+        .court-card.court-active {
+            border-color: var(--accent);
+            box-shadow: 0 0 25px var(--accent-dim);
+        }
+
+        .court-header {
+            font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 2px;
             color: var(--accent);
-            margin-bottom: 6px;
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: space-between;
         }
 
-        .court-label::after {
-            content: '';
-            flex: 1;
-            height: 1px;
+        .court-status-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+        }
+
+        .court-status-empty {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+        }
+
+        .court-status-playing {
             background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        .court-empty-state {
+            text-align: center;
+            padding: 16px 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
         }
 
         .match-display {
@@ -549,11 +540,9 @@
             font-size: 0.7rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 2px;
             color: var(--text-muted);
             margin-bottom: 10px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
         }
 
@@ -590,54 +579,6 @@
         .team-player .tp-name {
             font-weight: 600;
             font-size: 0.9rem;
-        }
-
-        /* ===== SHUTTLE COUNTER ===== */
-        .shuttle-counter {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 24px;
-            padding: 20px 0;
-        }
-
-        .shuttle-counter .counter-btn {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            color: var(--text-primary);
-            font-size: 1.8rem;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-        }
-
-        .shuttle-counter .counter-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        .shuttle-counter .counter-btn:active {
-            transform: scale(0.9);
-        }
-
-        .shuttle-counter .counter-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        .shuttle-counter .counter-value {
-            font-size: 3.5rem;
-            font-weight: 900;
-            min-width: 80px;
-            text-align: center;
-            color: var(--accent);
-            text-shadow: 0 0 30px var(--accent-dim);
         }
 
         /* ===== STICKY FOOTER ===== */
@@ -721,12 +662,6 @@
             padding: 24px 0;
         }
 
-        .qr-container canvas {
-            border-radius: var(--radius);
-            background: #fff;
-            padding: 16px;
-        }
-
         .qr-label {
             font-size: 0.8rem;
             color: var(--text-muted);
@@ -764,6 +699,7 @@
             gap: 16px;
             padding-bottom: 40px;
             animation: scaleIn 0.3s ease-out both;
+            margin: auto;
         }
 
         .modal-header {
@@ -794,12 +730,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: var(--transition);
-        }
-
-        .modal-close-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
         }
 
         /* ===== EMPTY STATE ===== */
@@ -861,7 +791,7 @@
             font-size: 0.8rem;
         }
 
-        /* ===== SCREEN SPECIFIC ===== */
+        /* ===== SCREEN SPECIFIC & MISC ===== */
         .setup-icon {
             font-size: 4rem;
             text-align: center;
@@ -910,7 +840,6 @@
             margin-top: 4px;
         }
 
-        /* ===== SECTION DIVIDER ===== */
         .section-title {
             font-size: 0.75rem;
             font-weight: 600;
@@ -929,7 +858,6 @@
             background: var(--border);
         }
 
-        /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar {
             width: 4px;
         }
@@ -943,7 +871,6 @@
             border-radius: 4px;
         }
 
-        /* ===== TOAST ===== */
         .toast {
             position: fixed;
             top: 20px;
@@ -956,7 +883,7 @@
             border-radius: var(--radius-sm);
             font-size: 0.85rem;
             font-weight: 600;
-            z-index: 200;
+            z-index: 1000;
             animation: slideDown 0.3s ease-out both;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
         }
@@ -965,74 +892,205 @@
             animation: fadeIn 0.2s ease-out reverse both;
         }
 
-        /* ===== COURT CARDS ===== */
-        .courts-container {
+        /* ===== SCOREBOARD IN CHECKOUT ===== */
+        .scoreboard-list {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 6px;
         }
 
-        .court-card {
-            background: var(--bg-card);
-            border: 1.5px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px;
+        .scoreboard-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
             transition: var(--transition);
         }
 
-        .court-card.court-active {
-            border-color: var(--accent);
-            box-shadow: 0 0 25px var(--accent-dim);
+        .scoreboard-row:hover {
+            background: rgba(255, 255, 255, 0.06);
         }
 
-        .court-card .court-header {
+        .scoreboard-row.top-1 {
+            border-color: rgba(255, 215, 0, 0.35);
+            background: rgba(255, 215, 0, 0.06);
+        }
+
+        .scoreboard-row.top-2 {
+            border-color: rgba(192, 192, 192, 0.3);
+            background: rgba(192, 192, 192, 0.05);
+        }
+
+        .scoreboard-row.top-3 {
+            border-color: rgba(205, 127, 50, 0.3);
+            background: rgba(205, 127, 50, 0.05);
+        }
+
+        .scoreboard-rank {
+            font-size: 1.1rem;
+            width: 32px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .scoreboard-name {
+            flex: 1;
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .scoreboard-score {
+            font-weight: 800;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+            min-width: 70px;
+            text-align: right;
+        }
+
+        .scoreboard-games {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        /* ===== ATTENDANCE TOGGLE ===== */
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            transition: 0.3s ease;
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.3s ease;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .toggle-switch input:checked+.toggle-slider {
+            background: #34c759;
+        }
+
+        .toggle-switch input:checked+.toggle-slider::before {
+            transform: translateX(20px);
+        }
+
+        .player-card.absent {
+            opacity: 0.45;
+            filter: grayscale(1);
+        }
+
+        /* ===== BACKUP TEXTAREA ===== */
+        .backup-textarea {
+            width: 100%;
+            min-height: 150px;
+            max-height: 250px;
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
             font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--accent);
-            margin-bottom: 14px;
+            padding: 12px;
+            resize: vertical;
+            line-height: 1.4;
+        }
+
+        .backup-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .backup-btn-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .backup-btn-row .btn {
+            flex: 1;
+        }
+
+        /* ===== GROUP CARDS ===== */
+        .group-card {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 12px;
+            background: var(--bg-card);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            animation: slideDown 0.25s ease-out both;
+        }
+
+        .group-card:hover {
+            border-color: var(--accent);
+            background: var(--bg-card-hover);
+            box-shadow: 0 0 20px var(--accent-dim);
+        }
+
+        .group-card-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .group-name {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .group-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .group-list {
+            display: flex;
+            flex-direction: column;
             gap: 8px;
         }
 
-        .court-card .court-status-label {
-            font-size: 0.7rem;
-            font-weight: 600;
-            padding: 3px 10px;
-            border-radius: 20px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .court-status-empty {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-muted);
-        }
-
-        .court-status-playing {
-            background: var(--accent-dim);
-            color: var(--accent);
-        }
-
-        /* ===== PLAYER STATUS BADGES ===== */
-        .badge-waiting {
-            background: rgba(57, 255, 20, 0.12);
-            color: var(--accent);
-        }
-
-        .badge-playing {
-            background: rgba(247, 127, 0, 0.15);
-            color: var(--intermediate);
-        }
-
-        .court-empty-state {
+        #activeGroupLabel {
             text-align: center;
-            padding: 16px 0;
-            color: var(--text-muted);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: 600;
+            margin-top: 4px;
+            letter-spacing: 1px;
         }
     </style>
 </head>
@@ -1040,22 +1098,51 @@
 <body>
 
     <div class="app-container" id="app">
-        <!-- HEADER -->
         <header class="app-header animate-fade-in">
             <div class="app-logo">
                 CourtSide
                 <span>🏸 จัดการกลุ่มแบดมินตัน</span>
             </div>
+            <div id="activeGroupLabel" style="display:none;"></div>
         </header>
 
-        <!-- ===== SCREEN 1: SETUP ===== -->
-        <div class="screen active" id="screen-setup">
+        <div class="screen active" id="screen-groups">
+            <div class="animate-fade-in-up" style="animation-delay: 0.1s;">
+                <div class="setup-icon">🏸</div>
+                <div class="setup-title">เลือกก๊วน</div>
+                <div class="setup-subtitle">เลือกก๊วนเดิมหรือสร้างก๊วนใหม่</div>
+            </div>
+            <div class="card animate-fade-in-up" style="animation-delay: 0.15s;">
+                <div class="card-header"><span class="icon">➕</span> สร้างก๊วนใหม่</div>
+                <div class="add-player-row">
+                    <input type="text" id="groupNameInput" placeholder="ชื่อก๊วน" maxlength="30"
+                        onkeydown="if(event.key==='Enter') createGroup()" />
+                    <button class="btn btn-primary" onclick="createGroup()">สร้าง</button>
+                </div>
+            </div>
+            <div class="section-title">ก๊วนทั้งหมด (<span id="groupCount">0</span>)</div>
+            <div class="group-list" id="groupList">
+                <div class="empty-state">
+                    <div class="empty-icon">🏸</div>
+                    <div class="empty-text">ยังไม่มีก๊วน<br />สร้างก๊วนใหม่เพื่อเริ่มต้น</div>
+                </div>
+            </div>
+
+            <div class="section-title" style="margin-top: 12px;">📦 สำรองข้อมูล</div>
+            <div class="backup-btn-row animate-fade-in-up" style="animation-delay: 0.25s;">
+                <button class="btn btn-secondary" onclick="openExportModal()">📤 ส่งออกข้อมูลทั้งหมด</button>
+                <button class="btn btn-secondary" onclick="openImportModal()">📥 นำเข้าข้อมูล</button>
+            </div>
+        </div>
+
+        <div class="screen" id="screen-setup">
+            <button class="btn btn-secondary btn-block" onclick="backToGroups()" style="margin-bottom:4px;">←
+                เปลี่ยนก๊วน</button>
             <div class="animate-fade-in-up" style="animation-delay: 0.1s;">
                 <div class="setup-icon">⚙️</div>
                 <div class="setup-title">ตั้งค่าเซสชัน</div>
                 <div class="setup-subtitle">เลือกจำนวนสนามแล้วเริ่มเพิ่มผู้เล่น</div>
             </div>
-
             <div class="card animate-fade-in-up" style="animation-delay: 0.15s;">
                 <div class="card-header"><span class="icon">🏟️</span> จำนวนสนาม</div>
                 <div class="input-group">
@@ -1063,14 +1150,12 @@
                     <input type="text" id="numberOfCourts" inputmode="numeric" placeholder="เช่น 1" value="1" />
                 </div>
             </div>
-
             <button class="btn btn-primary btn-block btn-lg animate-fade-in-up" style="animation-delay: 0.2s;"
                 onclick="startSession()">
                 🚀 เริ่มเซสชัน
             </button>
         </div>
 
-        <!-- ===== SCREEN 2: LOBBY ===== -->
         <div class="screen" id="screen-lobby">
             <div class="section-title">เพิ่มผู้เล่น</div>
 
@@ -1085,9 +1170,7 @@
                 <button class="btn btn-primary" onclick="addPlayer()">➕</button>
             </div>
 
-            <div class="section-title" style="margin-top: 8px;">
-                ผู้เล่น (<span id="playerCount">0</span>)
-            </div>
+            <div class="section-title" style="margin-top: 8px;">ผู้เล่น (<span id="playerCount">0</span>)</div>
 
             <div class="player-list" id="playerList">
                 <div class="empty-state" id="emptyPlayers">
@@ -1101,9 +1184,7 @@
             </button>
         </div>
 
-        <!-- ===== SCREEN 3: ACTIVE SESSION ===== -->
         <div class="screen" id="screen-session">
-            <!-- Stats overview -->
             <div class="stat-grid animate-fade-in" id="sessionStats">
                 <div class="stat-card">
                     <div class="stat-value" id="statPlayers">0</div>
@@ -1119,15 +1200,12 @@
                 </div>
             </div>
 
-            <!-- Independent Courts -->
             <div class="section-title">สนาม</div>
             <div class="courts-container" id="courtsContainer"></div>
 
-            <!-- Waiting Players -->
             <div class="section-title">ผู้เล่นทั้งหมด (<span id="sessionPlayerCount">0</span>)</div>
             <div class="player-list" id="sessionPlayerList"></div>
 
-            <!-- Match History -->
             <div class="section-title">ประวัติการจับคู่</div>
             <div class="match-history" id="matchHistory">
                 <div class="empty-state" id="emptyMatches">
@@ -1137,11 +1215,37 @@
             </div>
         </div>
 
-        <!-- ===== END SESSION FORM MODAL ===== -->
+        <div class="modal-overlay" id="scoreModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🏆 ระบุผลการแข่งขัน</h2>
+                    <button class="modal-close-btn" onclick="closeScoreModal()" title="ปิด">✕</button>
+                </div>
+                <p style="text-align: center; color: var(--text-muted); margin-bottom: 10px;">สนาม <span
+                        id="scoreCourtNum"></span></p>
+
+                <button class="btn btn-primary btn-block btn-lg"
+                    style="margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px;"
+                    onclick="submitScore('A')">
+                    <span>🎉 ทีม A ชนะ (+1 แต้ม)</span>
+                    <span id="scoreTeamANames" style="font-size: 0.75rem; opacity: 0.8; font-weight: 400;"></span>
+                </button>
+                <button class="btn btn-primary btn-block btn-lg"
+                    style="margin-bottom: 10px; background: var(--intermediate); display: flex; flex-direction: column; align-items: center; gap: 2px;"
+                    onclick="submitScore('B')">
+                    <span>🎉 ทีม B ชนะ (+1 แต้ม)</span>
+                    <span id="scoreTeamBNames" style="font-size: 0.75rem; opacity: 0.8; font-weight: 400;"></span>
+                </button>
+                <button class="btn btn-secondary btn-block btn-lg" onclick="submitScore('DRAW')">
+                    🤝 เสมอกัน (ไม่ได้แต้ม)
+                </button>
+            </div>
+        </div>
+
         <div class="modal-overlay" id="endSessionModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>� สรุปค่าใช้จ่ายทั้งหมด</h2>
+                    <h2>🧾 สรุปค่าใช้จ่ายทั้งหมด</h2>
                     <button class="modal-close-btn" onclick="closeEndSessionModal()" title="ปิด">✕</button>
                 </div>
 
@@ -1173,16 +1277,12 @@
                     </div>
                 </div>
 
-                <button class="btn btn-primary btn-block btn-lg" onclick="calculateAndShowSummary()">
-                    🧮 คำนวณยอดหารเฉลี่ย
-                </button>
-                <button class="btn btn-secondary btn-block" onclick="closeEndSessionModal()">
-                    ✕ ยกเลิก
-                </button>
+                <button class="btn btn-primary btn-block btn-lg" onclick="calculateAndShowSummary()">🧮
+                    คำนวณยอดหารเฉลี่ย</button>
+                <button class="btn btn-secondary btn-block" onclick="closeEndSessionModal()">✕ ยกเลิก</button>
             </div>
         </div>
 
-        <!-- ===== CHECKOUT MODAL OVERLAY ===== -->
         <div class="modal-overlay" id="checkoutModal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -1195,6 +1295,11 @@
                     <div class="bill-summary" id="billSummary"></div>
                 </div>
 
+                <div class="card" id="scoreboardCard" style="display: none;">
+                    <div class="card-header"><span class="icon">🏆</span> สรุปคะแนนผู้เล่น</div>
+                    <div class="scoreboard-list" id="scoreboardList"></div>
+                </div>
+
                 <div class="card" id="qrCard" style="display: none;">
                     <div class="card-header"><span class="icon">📱</span> สแกนจ่ายเงิน</div>
                     <div class="qr-container" id="qrContainer">
@@ -1204,584 +1309,60 @@
                     </div>
                 </div>
 
-                <button class="btn btn-secondary btn-block btn-lg" onclick="closeCheckout()">
-                    ↩️ กลับไปหน้าหลัก
+                <button class="btn btn-block btn-lg" id="btnSaveImage" onclick="saveAsImage()"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; font-weight: 700; box-shadow: 0 4px 20px rgba(102,126,234,0.3); display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1rem;">
+                    � บันทึกเป็นรูปภาพ
                 </button>
-                <button class="btn btn-primary btn-block btn-lg" onclick="newSession()">
-                    🔄 เริ่มเซสชันใหม่
-                </button>
+
+                <button class="btn btn-secondary btn-block btn-lg" onclick="closeCheckout()">↩️ กลับไปหน้าหลัก</button>
+                <button class="btn btn-primary btn-block btn-lg" onclick="newSession()">🔄 เริ่มเซสชันใหม่</button>
             </div>
         </div>
 
-        <!-- ===== STICKY FOOTER (session screen only) ===== -->
         <div class="sticky-footer" id="sessionFooter" style="display: none;">
             <div class="footer-inner">
-                <button class="btn btn-secondary" onclick="backToLobby()">
-                    👥 เพิ่มผู้เล่น
-                </button>
-                <button class="btn btn-danger" onclick="endSession()">
-                    🏁 จบเซสชัน
-                </button>
+                <button class="btn btn-secondary" onclick="backToLobby()">👥 เพิ่มผู้เล่น</button>
+                <button class="btn btn-danger" onclick="endSession()">🏁 จบเซสชัน</button>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="exportModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>📦 ส่งออกข้อมูลก๊วนทั้งหมด</h2>
+                    <button class="modal-close-btn" onclick="closeExportModal()" title="ปิด">✕</button>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">
+                    ใช้สำหรับย้ายข้อมูลไปเครื่องอื่น หรือให้คนอื่นช่วยดูแลก๊วน<br>คัดลอกข้อมูลด้านล่างแล้วส่งต่อผ่าน
+                    LINE</p>
+                <textarea class="backup-textarea" id="exportData" readonly></textarea>
+                <div class="backup-btn-row">
+                    <button class="btn btn-primary btn-lg" onclick="copyExportData()">📋 คัดลอกโค้ด</button>
+                    <button class="btn btn-secondary btn-lg" onclick="closeExportModal()">✕ ปิด</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="importModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>📦 นำเข้าข้อมูลก๊วนทั้งหมด</h2>
+                    <button class="modal-close-btn" onclick="closeImportModal()" title="ปิด">✕</button>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">
+                    ใช้สำหรับรับข้อมูลจากเครื่องอื่น หรือรับช่วงดูแลก๊วน<br>วางข้อมูล JSON
+                    ที่ได้รับจากเพื่อนลงในช่องด้านล่าง</p>
+                <textarea class="backup-textarea" id="importData" placeholder="วางข้อมูล JSON ที่นี่..."></textarea>
+                <div class="backup-btn-row">
+                    <button class="btn btn-primary btn-lg" onclick="importData()">💾 บันทึกข้อมูล</button>
+                    <button class="btn btn-secondary btn-lg" onclick="closeImportModal()">✕ ยกเลิก</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // ===== STATE =====
-        const state = {
-            players: [],
-            courtFee: 0,
-            shuttlePrice: 50,
-            shuttleCount: 0,
-            numberOfCourts: 1,
-            organizerPromptPayID: '',
-            currentView: 'setup',
-            matches: [],
-            courts: [],  // each: { match: null | {teamA, teamB}, playerIds: [] }
-            nextPlayerId: 1,
-            pairingHistory: {},
-        };
+    <script src="app.js"></script>
 
-        // ===== NAVIGATION =====
-        function showScreen(name) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            const screen = document.getElementById('screen-' + name);
-            if (screen) screen.classList.add('active');
-            state.currentView = name;
-            document.getElementById('sessionFooter').style.display =
-                name === 'session' ? 'block' : 'none';
-        }
-
-        // ===== TOAST =====
-        function showToast(msg) {
-            const old = document.querySelector('.toast');
-            if (old) old.remove();
-            const t = document.createElement('div');
-            t.className = 'toast';
-            t.textContent = msg;
-            document.body.appendChild(t);
-            setTimeout(() => { t.classList.add('toast-hide'); setTimeout(() => t.remove(), 300); }, 2500);
-        }
-
-        // ===== SETUP =====
-        function startSession() {
-            const courts = parseInt(document.getElementById('numberOfCourts').value) || 1;
-            if (courts < 1) return showToast('⚠️ ต้องมีอย่างน้อย 1 สนาม');
-
-            state.numberOfCourts = courts;
-            showScreen('lobby');
-            document.getElementById('playerName').focus();
-        }
-
-        // ===== PLAYER MANAGEMENT =====
-        function getSkillLabel(level) {
-            return { 1: 'เริ่มต้น', 2: 'กลาง', 3: 'สูง' }[level] || 'กลาง';
-        }
-
-        function getSkillClass(level) {
-            return { 1: 'beginner', 2: 'intermediate', 3: 'advanced' }[level] || 'intermediate';
-        }
-
-        function addPlayer() {
-            const nameInput = document.getElementById('playerName');
-            const skillSelect = document.getElementById('playerSkill');
-            const name = nameInput.value.trim();
-            const skill = parseInt(skillSelect.value);
-
-            if (!name) return showToast('⚠️ กรุณากรอกชื่อผู้เล่น');
-            if (state.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
-                return showToast('⚠️ มีผู้เล่นชื่อนี้แล้ว');
-            }
-
-            state.players.push({
-                id: state.nextPlayerId++,
-                name,
-                skillLevel: skill,
-                gamesPlayed: 0,
-                status: 'waiting',
-            });
-
-            nameInput.value = '';
-            nameInput.focus();
-            renderPlayers();
-            showToast(`✅ เพิ่ม ${name} เรียบร้อย`);
-        }
-
-        function removePlayer(id) {
-            state.players = state.players.filter(p => p.id !== id);
-            renderPlayers();
-        }
-
-        function renderPlayers() {
-            const list = document.getElementById('playerList');
-            const count = document.getElementById('playerCount');
-            const btn = document.getElementById('btnStartPlaying');
-
-            count.textContent = state.players.length;
-            btn.disabled = state.players.length < 4;
-
-            if (state.players.length === 0) {
-                list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏸</div><div class="empty-text">ยังไม่มีผู้เล่น<br/>เพิ่มผู้เล่นเพื่อเริ่มจัดแมตช์</div></div>';
-                return;
-            }
-
-            list.innerHTML = state.players.map(p => `
-    <div class="player-card" data-id="${p.id}">
-      <div class="player-avatar">${p.name.charAt(0).toUpperCase()}</div>
-      <div class="player-info">
-        <div class="player-name">${escapeHtml(p.name)}</div>
-        <div class="player-meta">
-          <span class="badge badge-${getSkillClass(p.skillLevel)}">${getSkillLabel(p.skillLevel)}</span>
-          <span class="game-count">🎮 ${p.gamesPlayed} เกม</span>
-        </div>
-      </div>
-      <button class="btn-remove" onclick="removePlayer(${p.id})" title="ลบผู้เล่น">✕</button>
-    </div>
-  `).join('');
-        }
-
-        function escapeHtml(str) {
-            const d = document.createElement('div');
-            d.textContent = str;
-            return d.innerHTML;
-        }
-
-        // ===== START PLAYING =====
-        function startPlaying() {
-            if (state.players.length < 4) return showToast('⚠️ ต้องมีผู้เล่นอย่างน้อย 4 คน');
-            // Initialize courts
-            state.courts = [];
-            for (let i = 0; i < state.numberOfCourts; i++) {
-                state.courts.push({ match: null, playerIds: [] });
-            }
-            // Ensure all players are waiting
-            state.players.forEach(p => p.status = 'waiting');
-            showScreen('session');
-            updateSessionStats();
-            renderCourts();
-            renderSessionPlayers();
-        }
-
-        function backToLobby() {
-            // Prevent going back if any court has an active game
-            const activeCourts = state.courts.filter(c => c.match !== null);
-            if (activeCourts.length > 0) {
-                return showToast('⚠️ กรุณาจบเกมทุกสนามก่อน');
-            }
-            showScreen('lobby');
-            renderPlayers();
-        }
-
-        // ===== SESSION STATS =====
-        function updateSessionStats() {
-            document.getElementById('statPlayers').textContent = state.players.length;
-            document.getElementById('statWaiting').textContent = state.players.filter(p => p.status === 'waiting').length;
-            document.getElementById('statMatches').textContent = state.matches.length;
-        }
-
-        // ===== MATCHMAKING =====
-
-        // Fisher-Yates shuffle
-        function shuffleArray(arr) {
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-            }
-            return arr;
-        }
-
-        // Pairing history helpers
-        function pairKey(idA, idB) {
-            return idA < idB ? `${idA}-${idB}` : `${idB}-${idA}`;
-        }
-
-        function getPairCount(idA, idB) {
-            return state.pairingHistory[pairKey(idA, idB)] || 0;
-        }
-
-        function recordPairings(match) {
-            const tA = match.teamA;
-            const tB = match.teamB;
-            const k1 = pairKey(tA[0].id, tA[1].id);
-            const k2 = pairKey(tB[0].id, tB[1].id);
-            state.pairingHistory[k1] = (state.pairingHistory[k1] || 0) + 2;
-            state.pairingHistory[k2] = (state.pairingHistory[k2] || 0) + 2;
-            for (const a of tA) {
-                for (const b of tB) {
-                    const k = pairKey(a.id, b.id);
-                    state.pairingHistory[k] = (state.pairingHistory[k] || 0) + 1;
-                }
-            }
-        }
-
-        function balanceFour(four) {
-            const pairings = [
-                [[0, 1], [2, 3]],
-                [[0, 2], [1, 3]],
-                [[0, 3], [1, 2]],
-            ];
-            let minDiff = Infinity;
-            for (const [[a, b], [c, d]] of pairings) {
-                const diff = Math.abs(
-                    (four[a].skillLevel + four[b].skillLevel) -
-                    (four[c].skillLevel + four[d].skillLevel)
-                );
-                if (diff < minDiff) minDiff = diff;
-            }
-            const threshold = Math.min(minDiff + 1, 2);
-            const candidates = [];
-            for (const [[a, b], [c, d]] of pairings) {
-                const diff = Math.abs(
-                    (four[a].skillLevel + four[b].skillLevel) -
-                    (four[c].skillLevel + four[d].skillLevel)
-                );
-                if (diff <= threshold) {
-                    const partnerPenalty =
-                        getPairCount(four[a].id, four[b].id) +
-                        getPairCount(four[c].id, four[d].id);
-                    const opponentPenalty =
-                        getPairCount(four[a].id, four[c].id) +
-                        getPairCount(four[a].id, four[d].id) +
-                        getPairCount(four[b].id, four[c].id) +
-                        getPairCount(four[b].id, four[d].id);
-                    const totalPenalty = partnerPenalty * 2 + opponentPenalty + diff * 3;
-                    candidates.push({
-                        teamA: [four[a], four[b]],
-                        teamB: [four[c], four[d]],
-                        penalty: totalPenalty,
-                    });
-                }
-            }
-            const bestPenalty = Math.min(...candidates.map(c => c.penalty));
-            const best = candidates.filter(c => c.penalty === bestPenalty);
-            const chosen = best[Math.floor(Math.random() * best.length)];
-            return { teamA: chosen.teamA, teamB: chosen.teamB };
-        }
-
-        // ===== PER-COURT MATCHMAKING =====
-        function queueCourt(courtIdx) {
-            const court = state.courts[courtIdx];
-            if (court.match) return showToast('⚠️ สนามนี้มีเกมอยู่แล้ว');
-
-            // Get only WAITING players
-            const waitingPlayers = state.players.filter(p => p.status === 'waiting');
-            if (waitingPlayers.length < 4) return showToast(`⚠️ ผู้เล่นรอไม่พอ (รอ ${waitingPlayers.length} / ต้องการ 4)`);
-
-            // Sort by fewest games, shuffle within same gamesPlayed
-            const sorted = [...waitingPlayers].sort((a, b) => a.gamesPlayed - b.gamesPlayed);
-            let i = 0;
-            while (i < sorted.length) {
-                let j = i;
-                while (j < sorted.length && sorted[j].gamesPlayed === sorted[i].gamesPlayed) j++;
-                const group = sorted.slice(i, j);
-                shuffleArray(group);
-                for (let k = 0; k < group.length; k++) sorted[i + k] = group[k];
-                i = j;
-            }
-
-            // Pick top 4 and balance
-            const four = sorted.slice(0, 4);
-            const match = balanceFour(four);
-
-            // Record history
-            recordPairings(match);
-
-            // Set players to 'playing'
-            const playingIds = [...match.teamA, ...match.teamB].map(p => p.id);
-            playingIds.forEach(id => {
-                const p = state.players.find(pl => pl.id === id);
-                if (p) p.status = 'playing';
-            });
-
-            // Set court state
-            court.match = match;
-            court.playerIds = playingIds;
-
-            renderCourts();
-            renderSessionPlayers();
-            updateSessionStats();
-            showToast(`✅ สนาม ${courtIdx + 1} เริ่มเกมแล้ว!`);
-        }
-
-        function endCourtGame(courtIdx) {
-            const court = state.courts[courtIdx];
-            if (!court.match) return;
-
-            // Increment gamesPlayed and set status back to 'waiting'
-            court.playerIds.forEach(id => {
-                const p = state.players.find(pl => pl.id === id);
-                if (p) {
-                    p.gamesPlayed++;
-                    p.status = 'waiting';
-                }
-            });
-
-            // Record in match history
-            state.matches.push({ ...court.match, courtNum: courtIdx + 1 });
-
-            // Clear the court
-            court.match = null;
-            court.playerIds = [];
-
-            renderCourts();
-            renderSessionPlayers();
-            updateSessionStats();
-            showToast(`🏁 จบเกมสนาม ${courtIdx + 1}`);
-            renderMatchHistory();
-        }
-
-        // ===== RENDER COURTS =====
-        function renderCourts() {
-            const container = document.getElementById('courtsContainer');
-
-            const renderTeam = (team, label, score) => `
-    <div class="team-block">
-      <div class="team-label">
-        ${label}
-        <span class="team-score">⭐ ${score} คะแนน</span>
-      </div>
-      <div class="team-players">
-        ${team.map(p => `
-          <div class="team-player">
-            <div class="tp-avatar">${p.name.charAt(0).toUpperCase()}</div>
-            <div class="tp-name">${escapeHtml(p.name)}</div>
-            <span class="badge badge-${getSkillClass(p.skillLevel)}">${getSkillLabel(p.skillLevel)}</span>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-
-            container.innerHTML = state.courts.map((court, idx) => {
-                const isActive = court.match !== null;
-                if (isActive) {
-                    const m = court.match;
-                    const scoreA = m.teamA.reduce((s, p) => s + p.skillLevel, 0);
-                    const scoreB = m.teamB.reduce((s, p) => s + p.skillLevel, 0);
-                    return `
-          <div class="court-card court-active animate-scale-in">
-            <div class="court-header">
-              <span>🏟️ สนาม ${idx + 1}</span>
-              <span class="court-status-label court-status-playing">กำลังเล่น</span>
-            </div>
-            <div class="match-display" style="box-shadow:none; border:none; padding:0;">
-              ${renderTeam(m.teamA, 'ทีม A', scoreA)}
-              <div class="vs-label">⚔️ VS</div>
-              ${renderTeam(m.teamB, 'ทีม B', scoreB)}
-            </div>
-            <button class="btn btn-danger btn-block" style="margin-top: 16px;" onclick="endCourtGame(${idx})">
-              🏁 จบเกมคอร์ทนี้
-            </button>
-          </div>
-        `;
-                } else {
-                    const waitingCount = state.players.filter(p => p.status === 'waiting').length;
-                    return `
-          <div class="court-card">
-            <div class="court-header">
-              <span>🏟️ สนาม ${idx + 1}</span>
-              <span class="court-status-label court-status-empty">ว่าง</span>
-            </div>
-            <div class="court-empty-state">พร้อมรับผู้เล่น • รอ ${waitingCount} คน</div>
-            <button class="btn btn-primary btn-block" onclick="queueCourt(${idx})" ${waitingCount < 4 ? 'disabled' : ''}>
-              🎲 สุ่มคนลงคอร์ทนี้
-            </button>
-          </div>
-        `;
-                }
-            }).join('');
-        }
-
-        // ===== SESSION PLAYER LIST =====
-        function renderSessionPlayers() {
-            const list = document.getElementById('sessionPlayerList');
-            const countEl = document.getElementById('sessionPlayerCount');
-            countEl.textContent = state.players.length;
-
-            if (state.players.length === 0) {
-                list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏸</div><div class="empty-text">ไม่มีผู้เล่น</div></div>';
-                return;
-            }
-
-            // Sort: waiting first, then playing
-            const sorted = [...state.players].sort((a, b) => {
-                if (a.status === 'waiting' && b.status !== 'waiting') return -1;
-                if (a.status !== 'waiting' && b.status === 'waiting') return 1;
-                return 0;
-            });
-
-            list.innerHTML = sorted.map(p => {
-                const statusBadge = p.status === 'waiting'
-                    ? '<span class="badge badge-waiting">รอเล่น</span>'
-                    : '<span class="badge badge-playing">กำลังเล่น</span>';
-                const canRemove = p.status === 'waiting';
-                return `
-    <div class="player-card" data-id="${p.id}" style="${p.status === 'playing' ? 'opacity: 0.6;' : ''}">
-      <div class="player-avatar">${p.name.charAt(0).toUpperCase()}</div>
-      <div class="player-info">
-        <div class="player-name">${escapeHtml(p.name)}</div>
-        <div class="player-meta">
-          <span class="badge badge-${getSkillClass(p.skillLevel)}">${getSkillLabel(p.skillLevel)}</span>
-          ${statusBadge}
-          <span class="game-count">🎮 ${p.gamesPlayed} เกม</span>
-        </div>
-      </div>
-      ${canRemove ? `<button class="btn-remove" onclick="removeSessionPlayer(${p.id})" title="ลบผู้เล่น">🗑️</button>` : ''}
-    </div>
-  `;
-            }).join('');
-        }
-
-        function removeSessionPlayer(id) {
-            const p = state.players.find(pl => pl.id === id);
-            if (p && p.status === 'playing') return showToast('⚠️ ไม่สามารถลบผู้เล่นที่กำลังเล่นอยู่');
-            state.players = state.players.filter(pl => pl.id !== id);
-            renderSessionPlayers();
-            renderCourts();
-            updateSessionStats();
-            if (p) showToast(`🗑️ ลบ ${p.name} แล้ว`);
-        }
-
-        function renderMatchHistory() {
-            const container = document.getElementById('matchHistory');
-
-            if (state.matches.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">ยังไม่มีแมตช์<br/>กด "สุ่มคนลงคอร์ทนี้" เพื่อเริ่ม</div></div>';
-                return;
-            }
-
-            container.innerHTML = state.matches.map((m, i) => `
-    <div class="match-history-item animate-slide-down">
-      <div class="match-num">${i + 1}</div>
-      <div class="match-text">
-        <div class="match-teams">
-          ${m.teamA.map(p => p.name).join(' & ')} <strong style="color:var(--accent)">VS</strong> ${m.teamB.map(p => p.name).join(' & ')}
-        </div>
-        <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">🏟️ สนาม ${m.courtNum || '?'}</div>
-      </div>
-    </div>
-  `).join('');
-
-            container.scrollTop = container.scrollHeight;
-        }
-
-        // ===== END SESSION (two-step flow) =====
-        function endSession() {
-            if (state.players.length === 0) return showToast('⚠️ ไม่มีผู้เล่น');
-
-            // Check for active courts
-            const activeCourts = state.courts.filter(c => c.match !== null);
-            if (activeCourts.length > 0) {
-                return showToast('⚠️ กรุณาจบเกมทุกสนามก่อนจึงจบเซสชัน');
-            }
-
-            // Reset form fields
-            document.getElementById('endCourtFee').value = '';
-            document.getElementById('endShuttleCount').value = '0';
-            document.getElementById('endShuttlePrice').value = '50';
-            document.getElementById('endPromptpayId').value = '';
-
-            document.getElementById('endSessionModal').classList.add('active');
-            document.getElementById('endCourtFee').focus();
-        }
-
-        function closeEndSessionModal() {
-            document.getElementById('endSessionModal').classList.remove('active');
-        }
-
-        function calculateAndShowSummary() {
-            const courtFee = parseFloat(document.getElementById('endCourtFee').value) || 0;
-            const shuttleCount = parseInt(document.getElementById('endShuttleCount').value) || 0;
-            const shuttlePrice = parseFloat(document.getElementById('endShuttlePrice').value) || 0;
-            const promptpayId = document.getElementById('endPromptpayId').value.trim();
-
-            if (courtFee <= 0) return showToast('⚠️ กรุณากรอกค่าสนามรวม');
-            if (!promptpayId) return showToast('⚠️ กรุณากรอกเบอร์พร้อมเพย์');
-            if (shuttleCount < 0) return showToast('⚠️ จำนวนลูกแบดต้องไม่ติดลบ');
-
-            // Save to state
-            state.courtFee = courtFee;
-            state.shuttleCount = shuttleCount;
-            state.shuttlePrice = shuttlePrice;
-            state.organizerPromptPayID = promptpayId;
-
-            // Calculate
-            const shuttleCost = shuttleCount * shuttlePrice;
-            const grandTotal = courtFee + shuttleCost;
-            const perPerson = grandTotal / state.players.length;
-
-            // Close the form modal
-            closeEndSessionModal();
-
-            // Render Bill
-            document.getElementById('billSummary').innerHTML = `
-    <div class="bill-row">
-      <span class="bill-label">🏟️ ค่าสนามรวม</span>
-      <span class="bill-value">${courtFee.toLocaleString()} ฿</span>
-    </div>
-    <div class="bill-row">
-      <span class="bill-label">🪶 ลูกแบดที่ใช้</span>
-      <span class="bill-value">${shuttleCount} ลูก × ${shuttlePrice.toLocaleString()} ฿</span>
-    </div>
-    <div class="bill-row">
-      <span class="bill-label">🪶 ค่าลูกแบดรวม</span>
-      <span class="bill-value">${shuttleCost.toLocaleString()} ฿</span>
-    </div>
-    <div class="bill-row">
-      <span class="bill-label">💰 ยอดรวมทั้งหมด</span>
-      <span class="bill-value" style="color: var(--text-primary); font-size: 1.1rem;">${grandTotal.toLocaleString()} ฿</span>
-    </div>
-    <div class="bill-row">
-      <span class="bill-label">👥 จำนวนผู้เล่น</span>
-      <span class="bill-value">${state.players.length} คน</span>
-    </div>
-    <div class="bill-total">
-      <span class="bill-label">💰 หารเฉลี่ยคนละ</span>
-      <span class="bill-value">${perPerson.toFixed(2)} ฿</span>
-    </div>
-  `;
-
-            // Generate PromptPay QR via promptpay.io
-            const qrCard = document.getElementById('qrCard');
-            const ppIdClean = promptpayId.replace(/[^0-9]/g, '');
-            const amount = perPerson.toFixed(2);
-            const qrUrl = `https://promptpay.io/${ppIdClean}/${amount}.png`;
-            document.getElementById('qrImage').src = qrUrl;
-            document.getElementById('qrLabel').innerHTML =
-                `สแกนเพื่อโอนเงิน <strong>${amount} ฿</strong><br/>พร้อมเพย์: ${escapeHtml(promptpayId)}`;
-            qrCard.style.display = '';
-
-            // Show the checkout modal
-            document.getElementById('checkoutModal').classList.add('active');
-        }
-
-        function closeCheckout() {
-            document.getElementById('checkoutModal').classList.remove('active');
-        }
-
-        // ===== NEW SESSION =====
-        function newSession() {
-            closeCheckout();
-            state.players = [];
-            state.courtFee = 0;
-            state.shuttlePrice = 50;
-            state.shuttleCount = 0;
-            state.numberOfCourts = 1;
-            state.organizerPromptPayID = '';
-            state.currentView = 'setup';
-            state.matches = [];
-            state.courts = [];
-            state.nextPlayerId = 1;
-            state.pairingHistory = {};
-
-            document.getElementById('numberOfCourts').value = '1';
-            renderPlayers();
-            renderMatchHistory();
-            showScreen('setup');
-        }
-
-
-    </script>
 </body>
 
 </html>
