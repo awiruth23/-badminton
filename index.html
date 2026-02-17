@@ -1115,21 +1115,18 @@
             <div class="card animate-fade-in-up" style="animation-delay: 0.15s;">
                 <div class="card-header"><span class="icon">➕</span> สร้างก๊วนใหม่</div>
                 <div class="add-player-row">
-                    <input type="text" id="newGroupName" placeholder="ชื่อก๊วนใหม่..." maxlength="30"
+                    <input type="text" id="newGroupName" placeholder="ชื่อก๊วนใหม่..."
                         onkeydown="if(event.key==='Enter') createGroup()" />
                     <button class="btn btn-primary" style="flex-shrink: 0;" onclick="createGroup()">สร้าง</button>
                 </div>
             </div>
-            <div class="section-title">ก๊วนทั้งหมด (<span id="groupCount">0</span>)</div>
-            <div class="group-list" id="groupList">
-                <div class="empty-state">
-                    <div class="empty-icon">🏸</div>
-                    <div class="empty-text">ยังไม่มีก๊วน<br />สร้างก๊วนใหม่เพื่อเริ่มต้น</div>
-                </div>
-            </div>
+            <div class="section-title animate-fade-in-up" style="animation-delay: 0.2s;">ก๊วนทั้งหมด (<span
+                    id="groupCount">0</span>)</div>
+            <div id="groupsListContainer" class="animate-fade-in-up"
+                style="animation-delay: 0.25s; display: flex; flex-direction: column; gap: 10px;"></div>
 
-            <div class="section-title" style="margin-top: 12px;">📦 สำรองข้อมูล</div>
-            <div class="backup-btn-row animate-fade-in-up" style="animation-delay: 0.25s;">
+            <div class="section-title" style="margin-top: 20px;">📦 สำรองข้อมูล</div>
+            <div class="backup-btn-row animate-fade-in-up" style="animation-delay: 0.3s;">
                 <button class="btn btn-secondary" onclick="openExportModal()">📤 ส่งออกข้อมูลทั้งหมด</button>
                 <button class="btn btn-secondary" onclick="openImportModal()">📥 นำเข้าข้อมูล</button>
             </div>
@@ -1448,6 +1445,11 @@
             }
         }
         window.addEventListener('load', loadState);
+        window.addEventListener('DOMContentLoaded', function () {
+            if (state.currentView === 'groups' || document.getElementById('screen-groups').classList.contains('active')) {
+                renderGroups();
+            }
+        });
 
         // ===== NAVIGATION =====
         function showScreen(name) {
@@ -1529,21 +1531,22 @@
         }
 
         function renderGroups() {
-            var list = document.getElementById('groupList');
+            var container = document.getElementById('groupsListContainer');
             var countEl = document.getElementById('groupCount');
-            if (!list) return;
-            if (countEl) countEl.textContent = state.groups.length;
-            if (state.groups.length === 0) {
-                list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏸</div><div class="empty-text">ยังไม่มีก๊วน<br/>สร้างก๊วนใหม่เพื่อเริ่มต้น</div></div>';
+            if (!container) return;
+            if (!state.groups || state.groups.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">🏸</div><div class="empty-text">ยังไม่มีก๊วน<br/>สร้างก๊วนใหม่เพื่อเริ่มต้น</div></div>';
+                if (countEl) countEl.textContent = '0';
                 return;
             }
-            list.innerHTML = state.groups.map(function (gr) {
-                return '<div class="group-card" onclick="selectGroup(' + gr.id + ')">' +
-                    '<div class="group-card-body">' +
-                    '<div class="group-name">' + escapeHtml(gr.name) + '</div>' +
-                    '<div class="group-meta">👥 ' + gr.players.length + ' ผู้เล่น • 🎮 ' + gr.matches.length + ' แมตช์</div>' +
+            if (countEl) countEl.textContent = state.groups.length;
+            container.innerHTML = state.groups.map(function (gr) {
+                return '<div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:16px;cursor:pointer;transition:0.2s;" onclick="selectGroup(' + gr.id + ')">' +
+                    '<div>' +
+                    '<div style="font-size:1.1rem;font-weight:700;color:var(--text-primary);">' + escapeHtml(gr.name) + '</div>' +
+                    '<div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px;">👥 ' + (gr.players ? gr.players.length : 0) + ' ผู้เล่น • 🎮 ' + (gr.matches ? gr.matches.length : 0) + ' แมตช์</div>' +
                     '</div>' +
-                    '<button class="btn-remove" onclick="event.stopPropagation(); deleteGroup(' + gr.id + ')" title="ลบก๊วน">🗑️</button>' +
+                    '<div style="color:var(--accent);font-size:1.2rem;">➔</div>' +
                     '</div>';
             }).join('');
         }
